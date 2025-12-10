@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # PHP Apache Web Server
+  web:
+    build: .
+    container_name: bloodbank_web
+    ports:
+      - "9080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=bloodbank123
+      - DB_NAME=blood_donation
+    depends_on:
+      - db
+    networks:
+      - bloodbank_network
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: bloodbank_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: bloodbank123
+      MYSQL_DATABASE: blood_donation
+    ports:
+      - "3310:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/blood_bank_database.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - bloodbank_network
+
+  # phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: bloodbank_phpmyadmin
+    restart: always
+    ports:
+      - "9090:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: bloodbank123
+    depends_on:
+      - db
+    networks:
+      - bloodbank_network
+
+volumes:
+  db_data:
+
+networks:
+  bloodbank_network:
+    driver: bridge
